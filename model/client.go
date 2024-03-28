@@ -2,13 +2,11 @@ package model
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type Client struct {
-	Id         uuid.UUID `json:"id"`
-	Sex        string    `json:"sex"`
-	DayOfBirth time.Time `json:"dayOfBirth"`
-	Name       string    `json:"name"`
+	Id       string    `json:"id"`
+	Sex      string    `json:"sex"`
+	Birthday time.Time `json:"birthday"`
+	Name     string    `json:"name"`
 }

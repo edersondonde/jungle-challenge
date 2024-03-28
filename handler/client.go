@@ -17,10 +17,10 @@ func GetClients(c *gin.Context) {
 		getClientById(c, id)
 	}
 
-	startBirthDate := c.Query("startBirthDate")
-	endBirthDate := c.Query("endBirthDate")
+	startBirthday := c.Query("startBirthday")
+	endBirthday := c.Query("endBirthday")
 
-	getClientsBetweenBirthDates(c, startBirthDate, endBirthDate)
+	getClientsBetweenBirthdays(c, startBirthday, endBirthday)
 }
 
 // getClientById handler to get the user by ID
@@ -37,13 +37,13 @@ func getClientById(c *gin.Context, id string) {
 	c.IndentedJSON(http.StatusOK, client)
 }
 
-// getClientsBetweenBirthDates handler to get users that have birthDate between the requested dates
-func getClientsBetweenBirthDates(c *gin.Context, startBirthDate string, endBirthDate string) {
-	clients, err := controller.GetClientsBetweenBirthDates(startBirthDate, endBirthDate)
+// getClientsBetweenBirthdays handler to get users that have birthday between the requested dates
+func getClientsBetweenBirthdays(c *gin.Context, startBirthday string, endBirthday string) {
+	clients, err := controller.GetClientsBetweenBirthdays(startBirthday, endBirthday)
 	if err != nil {
 		if errors.Is(err, utils.ErrStartDateWrongFormat) ||
-		errors.Is(err, utils.ErrEndDateWrongFormat)  ||
-		errors.Is(err, utils.ErrEndDateBeforeStartDate){
+			errors.Is(err, utils.ErrEndDateWrongFormat) ||
+			errors.Is(err, utils.ErrEndDateBeforeStartDate) {
 			c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		} else {
 			c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
@@ -53,7 +53,7 @@ func getClientsBetweenBirthDates(c *gin.Context, startBirthDate string, endBirth
 	c.IndentedJSON(http.StatusOK, clients)
 }
 
-// getClientsBetweenBirthDates handler to search for users by name
+// SearchClientByName handler to search for users by name
 func SearchClientByName(c *gin.Context) {
 	name := c.Query("name")
 

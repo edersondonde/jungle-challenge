@@ -7,8 +7,7 @@ var (
 	ErrClientNotFound = errors.New("client not found")
 
 	//400 errors
-	ErrStartDateWrongFormat = errors.New("wrong format of startBirthDate, expecting yyyy-mm-dd")
-	ErrEndDateWrongFormat = errors.New("wrong format of endBirthDate, expecting yyyy-mm-dd")
-	ErrEndDateBeforeStartDate = errors.New("endBirthDate should be after startBirthDate")
-
+	ErrStartDateWrongFormat   = errors.New("wrong format of startBirthday, expecting yyyy-mm-dd")
+	ErrEndDateWrongFormat     = errors.New("wrong format of endBirthday, expecting yyyy-mm-dd")
+	ErrEndDateBeforeStartDate = errors.New("endBirthday should be after startBirthday")
 )
