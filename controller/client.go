@@ -1,29 +1,35 @@
 package controller
 
 import (
-	"strings"
 	"time"
 
+	"github.com/edersondonde/jungle-challenge/domain"
 	"github.com/edersondonde/jungle-challenge/model"
 	"github.com/edersondonde/jungle-challenge/utils"
 )
 
-// GetClientById search for a user by ID
-func GetClientById(id string) (*model.Client, error) {
-	clients := getClients()
+type Client struct {
+	repository domain.ClientRepository
+}
 
-	for _, client := range clients {
-		if client.Id == id {
-			return client, nil
-		}
+func NewClientController(clientRepository domain.ClientRepository) Client {
+	return Client{
+		repository: clientRepository,
+	}
+}
+
+// GetClientById search for a user by ID
+func (c Client) GetClientById(id string) (*model.Client, error) {
+	client, err := c.repository.FindById(id)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, utils.ErrClientNotFound
+	return client, nil
 }
 
 // GetClientsBetweenBirthdays retrieves a list of users that have birthdays between requested dates
-func GetClientsBetweenBirthdays(startBirthdayStr string, endBirthdayStr string) ([]*model.Client, error) {
-	clients := getClients()
+func (c Client) GetClientsBetweenBirthdays(startBirthdayStr string, endBirthdayStr string) ([]*model.Client, error) {
 	startBirthday, err := time.Parse("2006-01-02", startBirthdayStr)
 	if err != nil {
 		return nil, utils.ErrStartDateWrongFormat
@@ -36,35 +42,21 @@ func GetClientsBetweenBirthdays(startBirthdayStr string, endBirthdayStr string) 
 		return nil, utils.ErrEndDateBeforeStartDate
 	}
 
-	var resultClients []*model.Client
-
-	for _, client := range clients {
-		if client.Birthday.After(startBirthday) && client.Birthday.Before(endBirthday) {
-			resultClients = append(resultClients, client)
-		}
+	resultClients, err := c.repository.GetClientsBetweenBirthdays(startBirthday, endBirthday)
+	if err != nil {
+		return nil, err
 	}
 
 	return resultClients, nil
 }
 
 // SearchClientByName finds the first user that matches the requested name
-func SearchClientByName(name string) (*model.Client, error) {
-	clients := getClients()
+func (c Client) SearchClientByName(name string) (*model.Client, error) {
 
-	for _, client := range clients {
-		if strings.HasPrefix(client.Name, name) {
-			return client, nil
-		}
+	client, err := c.repository.FindByName(name)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, utils.ErrClientNotFound
-}
-
-// Temporary while database is not implemented
-func getClients() []*model.Client {
-	clients := []*model.Client{
-		{Id: "000001", Sex: "male", Birthday: time.Now().AddDate(-5, 0, 0), Name: "Ederson"},
-		{Id: "000002", Sex: "female", Birthday: time.Now().AddDate(-7, 0, 0), Name: "Ana Flavia"},
-	}
-	return clients
+	return client, nil
 }
