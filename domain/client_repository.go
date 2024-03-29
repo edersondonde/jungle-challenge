@@ -47,8 +47,8 @@ func (c ClientRepository) FindByName(name string) (*model.Client, error) {
 }
 
 func (c ClientRepository) GetClientsBetweenBirthdays(startBirthday time.Time, endBirthday time.Time) ([]*model.Client, error) {
-	query := "SELECT uid, birthday, sex, name FROM client WHERE birthday BETWEEN $1 AND $2"
-	
+	query := "SELECT uid, birthday, sex, name FROM client WHERE birthday BETWEEN $1 AND $2 ORDER BY name ASC"
+
 	rows, err := c.db.Query(query, startBirthday, endBirthday)
 	if err != nil {
 		if err == sql.ErrNoRows {
