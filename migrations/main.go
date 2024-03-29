@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/spf13/viper"
 )
 
 const help = "it is expected one of the following commands:\n" +
@@ -23,6 +25,8 @@ func main() {
 	if len(args) != 2 {
 		log.Fatal(help)
 	}
+
+	initConfig()
 
 	if args[0] == "migrate" {
 		migrateDB(args[1])
@@ -39,9 +43,11 @@ func migrateDB(command string) {
 		log.Fatal(help)
 	}
 
+	connStr := getDBConnectionUrl()
+
 	m, err := migrate.New(
 		"file://jungle",
-		"postgres://postgres:pass@localhost:5432/jungle-challenge?sslmode=disable")
+		connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,28 +65,45 @@ func migrateDB(command string) {
 }
 
 func loadDB(filePath string) {
-	connStr := "postgres://postgres:pass@localhost:5432/jungle-challenge?sslmode=disable"
-	db, err := sql.Open("postgres", connStr)
+	url := viper.GetString("database.url")
+	port := viper.GetString("database.port")
+	user := viper.GetString("database.user")
+	pass := viper.GetString("database.password")
+	dbName := viper.GetString("database.name")
 
+	os.Setenv("PGPASSWORD", pass)
+
+	defer os.Clearenv("PGPASSWORD")
+
+	command := fmt.Sprintf("psql %v -U %v -p %v -h %v -c \"\\copy client from '%v' with (DELIMITER ',', format csv, header)", dbName, user, port, url, filePath)
+
+	cmd := exec.Command(command)
+	out, err := cmd.Output()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("could not run command: ", err)
 	}
+	fmt.Println("Output: ", string(out))
 
-	if err = db.Ping(); err != nil {
-		log.Fatal(err)
-	}
+}
 
-	fmt.Println("The database is connected")
+func getDBConnectionUrl() string () {
+	url := viper.GetString("database.url")
+	port := viper.GetString("database.port")
+	user := viper.GetString("database.user")
+	pass := viper.GetString("database.password")
+	dbName := viper.GetString("database.name")
 
-	sql := fmt.Sprintf("COPY client "+
-		"FROM '%v' "+
-		"DELIMITER ',' "+
-		"CSV HEADER;", filePath)
+	return fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=disable", user, pass, url, port, dbName)
+}
 
-	result, err := db.Exec(sql)
+func initConfig() {
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath(".")
+	viper.AutomaticEnv()
+	viper.SetEnvPrefix("ederson")
+	err := viper.ReadInConfig()
 	if err != nil {
-		log.Fatal(err.Error())
+		panic(fmt.Errorf("fatal error config file: %w", err))
 	}
-	fmt.Println(result.RowsAffected())
-
 }
