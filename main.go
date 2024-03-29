@@ -16,6 +16,8 @@ import (
 
 func main() {
 
+	gin.SetMode(gin.ReleaseMode)
+
 	initConfig()
 
 	db := initDatabase()
@@ -51,8 +53,6 @@ func initDatabase() *sql.DB {
 	dbName := viper.GetString("database.name")
 
 	connStr := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=disable", user, pass, url, port, dbName)
-
-	fmt.Println(connStr)
 
 	db, err := sql.Open("postgres", connStr)
 

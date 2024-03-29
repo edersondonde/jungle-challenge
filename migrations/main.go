@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -16,7 +15,8 @@ import (
 const help = "it is expected one of the following commands:\n" +
 	"    migrate up\n" +
 	"    migrate down\n" +
-	"    loadDB <FILE_PATH>."
+	"    loadDB <FILE_PATH>\n" +
+	"    init <FILEPATH>."
 
 func main() {
 
@@ -32,8 +32,13 @@ func main() {
 		migrateDB(args[1])
 	} else if args[0] == "loadDB" {
 		loadDB(args[1])
-	} else {
-		log.Fatal(help)
+	} else if args[0] == "init" {
+		migrateDBStep()
+		fmt.Println("First migration step done, loading DB")
+		loadDB(args[1])
+		fmt.Println("DB loading, starting second migration step")
+		migrateDBStep()
+		fmt.Println("Database initialization finished")
 	}
 
 }
@@ -64,29 +69,44 @@ func migrateDB(command string) {
 	}
 }
 
+func migrateDBStep() {
+	connStr := getDBConnectionUrl()
+
+	m, err := migrate.New(
+		"file://jungle",
+		connStr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := m.Steps(1); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("migration step done")
+}
+
 func loadDB(filePath string) {
-	url := viper.GetString("database.url")
+	url := viper.GetString("database.host")
 	port := viper.GetString("database.port")
 	user := viper.GetString("database.user")
 	pass := viper.GetString("database.password")
 	dbName := viper.GetString("database.name")
 
-	os.Setenv("PGPASSWORD", pass)
+	command := "psql"
+	args := fmt.Sprintf("%v -U %v -p %v -h %v -c \"\\copy client from '%v' with (DELIMITER ',', format csv, header)\"", dbName, user, port, url, filePath)
 
-	defer os.Clearenv("PGPASSWORD")
+	cmd := exec.Command(command, args)
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, fmt.Sprintf("PGPASSWORD=%v", pass))
 
-	command := fmt.Sprintf("psql %v -U %v -p %v -h %v -c \"\\copy client from '%v' with (DELIMITER ',', format csv, header)", dbName, user, port, url, filePath)
-
-	cmd := exec.Command(command)
 	out, err := cmd.Output()
 	if err != nil {
-		fmt.Println("could not run command: ", err)
+		log.Fatalf("could not run command: %v", err)
 	}
 	fmt.Println("Output: ", string(out))
 
 }
 
-func getDBConnectionUrl() string () {
+func getDBConnectionUrl() string {
 	url := viper.GetString("database.url")
 	port := viper.GetString("database.port")
 	user := viper.GetString("database.user")
