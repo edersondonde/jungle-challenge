@@ -21,6 +21,7 @@ To run the code locally, just type in the root path.
 `go run .`
 
 The following APIs are available:
-`/info/?clientId=<CLIENT_ID>` -> Returns the client that matches the ID
-`/info/?startBirthday=<YYYY-MM-DD>&endBirthday=<YYYY-MM-DD>` -> Returns the list of clients with birthdays between the provided dates
-`/search/?name=<START_NAME>` -> Returns the first user with name that starts with the START_NAME parameter
+
+- `/info/?clientId=<CLIENT_ID>` -> Returns the client that matches the ID
+- `/info/?startBirthday=<YYYY-MM-DD>&endBirthday=<YYYY-MM-DD>` -> Returns the list of clients with birthdays between the provided dates
+- `/search/?name=<START_NAME>` -> Returns the first user with name that starts with the START_NAME parameter
